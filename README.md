@@ -21,11 +21,15 @@ His gist describes the philosophy. This repo gives you the schema, templates, an
 
 ## Background
 
-I had a multi-agent pipeline for processing personal financial documents — specialist agents (tax, portfolio, data engineering) that maintained their own `learnings.md` notes, ingested raw PDFs and CSVs, and produced structured data for dashboards. Good at crunching numbers. No knowledge layer. The specialist notes were disconnected, cross-references were manual, and you couldn't query the system for reasoning — only for data.
+I had two separate projects that turned out to be solving the same problem.
 
-Karpathy's LLM Wiki pattern described exactly the missing piece: a structured wiki that sits on top of raw sources, maintained by an LLM. The specialist notes mapped to wiki pages. The raw documents mapped to his source layer. The processing pipeline mapped to his schema concept. The merge was natural.
+At work, I maintained a file-based knowledge store for LLM-assisted development — a structured markdown directory tree ingesting work notes, product documentation, and codebase context so the agent could reason accurately across sessions instead of starting cold every time. No UI, no graph — just a directory hierarchy the agent loaded on startup. It was scoped to a single project with generous token budgets, so the structure was functional rather than optimized.
 
-Building the actual wiki surfaced failure modes the base pattern doesn't address:
+On the personal side, I had a multi-agent pipeline for finance — specialist agents (tax, portfolio, data engineering) maintaining their own `learnings.md` notes, processing raw documents into structured data. Good at number-crunching, but the specialist notes were disconnected. No knowledge layer tying them together.
+
+Karpathy's LLM Wiki gist gave both projects a shared vocabulary. What I'd been doing at work — persistent markdown context for LLM reasoning — was his "wiki layer." What my finance pipeline needed — structured pages with cross-references and citations — was exactly his pattern formalized with explicit operations (ingest, query, lint) and Obsidian as a browsing interface. The convergence was natural: the finance specialist notes became wiki pages, raw documents became the source layer, and the processing pipeline mapped to the schema concept.
+
+Building the merged system at scale surfaced failure modes the base pattern doesn't address:
 
 - The provenance system caught a real filing error that a prior LLM session had dismissed — inline citation tracking forced investigation instead of silent acceptance
 - Structural lint flagged data gaps that would have gone unnoticed in flat notes
