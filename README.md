@@ -7,7 +7,7 @@
 LLMs maintain your personal knowledge base. Obsidian reads it. You stay in the loop.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/YOUR_USERNAME/brainfreeze/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/abhimanyudogra/brainfreeze/pulls)
 
 </div>
 
@@ -282,7 +282,7 @@ One commit per ingest, refactor, or prune. Local-only, no remote. Undo = `git re
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/brainfreeze.git ~/vaults
+git clone https://github.com/abhimanyudogra/brainfreeze.git ~/vaults
 
 # Pick a vault
 cd ~/vaults/personal-finance
