@@ -409,6 +409,7 @@ Every new page starts as a copy of the matching template. Claude may not skip re
 - **Never delete files.** Archive instead. Even rejected drafts are deleted, not staged for later — but live pages never get `rm`-ed. Medical history pages are especially important to retain.
 - **Never create a page outside the five categories.** Stop and ask.
 - **Never use plugin-specific link syntax.** Keep the vault portable: plain Obsidian wikilinks, plain YAML frontmatter, plain markdown.
+- **Relations are YAML block-lists of quoted wikilink strings.** Always write `depends-on:\n  - "[[entities/x]]"` — never `depends-on: [[entities/x], [entities/y]]`. The inline flow form is a YAML nested array, not a wikilink string, and every downstream consumer (lint, Dataview, this plugin's index) breaks on it. Same rule for `sources:` and every relation type.
 - **Never invent cross-references.** Search before linking.
 - **Never include verbatim therapist quotes or session transcripts.** This is a hard-fail in lint. See therapy notes privacy rule above.
 - **Never include full insurance member IDs, medical record numbers, SSN, or provider NPI numbers in any page body.** This is a lint-enforced rule (PHI leak check).

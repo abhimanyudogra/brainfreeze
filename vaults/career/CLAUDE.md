@@ -372,6 +372,7 @@ The career wiki **does not read from or write to** other vaults. Cross-reference
 - **Never delete files.** Archive instead. Even rejected drafts are deleted, not staged for later — but live pages never get `rm`-ed.
 - **Never create a page outside the five categories.** Stop and ask.
 - **Never use plugin-specific link syntax.** Keep the vault portable: plain Obsidian wikilinks, plain YAML frontmatter, plain markdown.
+- **Relations are YAML block-lists of quoted wikilink strings.** Always write `depends-on:\n  - "[[entities/x]]"` — never `depends-on: [[entities/x], [entities/y]]`. The inline flow form is a YAML nested array, not a wikilink string, and every downstream consumer (lint, Dataview, this plugin's index) breaks on it. Same rule for `sources:` and every relation type.
 - **Never invent cross-references.** Search before linking.
 - **Last-4 digits only** for sensitive identifiers (employee IDs, badge numbers). No full SSN, home address, or personal phone number in any page body. This is a lint-enforced rule.
 - **Never auto-fix lint findings.** Report them and offer fixes; apply only on user approval through the ingest procedure.
