@@ -19,7 +19,7 @@ Top-level instructions for LLM sessions working across your personal knowledge v
 All vaults use:
 
 1. `.drafts/` dotfolder for change-preview before writes
-2. Three-state provenance (`[^e]` extracted / `[^i]` inferred / `[^a]` ambiguous)
+2. Three-state provenance with inference-DAG tracking (`[^e]` extracted / `[^i]` inferred from explicit parents / `[^a]` ambiguous)
 3. Typed YAML relations (`supports`, `contradicts`, `supersedes`, `derives-from`, `depends-on`, `relates-to`)
 4. Source-to-page routing rules (vault-specific, in each vault's CLAUDE.md)
 5. `.manifest.json` for delta ingest (SHA-256 per source)

@@ -116,12 +116,13 @@ I love Karpathy's gist. But after actually running it, here's what breaks:
 | You'll hit this | Karpathy's base | brainfreeze |
 |---|---|---|
 | LLM writes a wrong number and you don't catch it for weeks | No review step | `.drafts/` folder with review gate |
-| Page says "net worth is $X" — is that from a bank statement or an LLM guess? | No citation discipline | Three-state provenance (`extracted` / `inferred` / `ambiguous`) |
+| Page says "net worth is $X" — is that from a bank statement, an LLM guess, or an LLM guess built on an earlier LLM guess? | No citation discipline | Three-state provenance with inference-DAG depth tracking |
 | Two pages link to each other but you can't tell if they agree or disagree | Untyped `[[wikilinks]]` | Typed YAML relations (`supports`, `contradicts`, `supersedes`...) |
 | You re-ingest last month's bank statement and get duplicate pages | No idempotency | SHA-256 manifest skips unchanged files |
 | Same source type gets routed to random pages across different ingests | Ad-hoc ingest | Deterministic source-to-page routing table |
 | You stop understanding your own wiki because the LLM does all the thinking | Fully autonomous | Mandatory conversation before any writing |
 | Lint runs are expensive so you skip them | Single-pass lint | Split: structural (free) + semantic (on-demand) |
+| After many ingests, pages drift from their sources but structural lint still says "all green" | No drift detection | Inference-DAG depth + on-demand semantic re-derivation |
 
 ---
 
@@ -135,15 +136,27 @@ If the LLM hallucinates a number, you catch it *before* it enters your knowledge
 
 *Drawn from [kytmanov/obsidian-llm-wiki-local](https://github.com/kytmanov/obsidian-llm-wiki-local)*
 
-### 2. Three-state provenance
+### 2. Three-state provenance with inference chains
 
-Every factual claim gets tagged inline:
+Every factual claim gets a type tag:
 
 - `[^e]` **extracted** — copied from a raw source ("W-2 Box 1 says $XXX,XXX")
 - `[^i]` **inferred** — LLM synthesis ("effective rate = total tax / AGI = XX.X%")
 - `[^a]` **ambiguous** — sources disagree ("return says $X loss; reconstruction says $Y")
 
-The frontmatter rolls up the counts. Lint warns when a page is mostly inference with no extracted backing. The `[^a]` tag is particularly valuable — it forces investigation of discrepancies instead of silent acceptance of whichever source the LLM happens to read first.
+Every `[^i]` must cite its parents explicitly, turning the provenance space into a small DAG:
+
+```
+[^e1]: extracted — W-2 Box 1 = $145,000
+[^e2]: extracted — 1099-DIV = $3,200
+[^i1]: inferred from [^e1], [^e2] — total income $148,200
+[^i2]: inferred from [^i1] — AGI roughly $145k after adjustments
+[^i3]: inferred from [^i2] — effective federal rate ≈ 24%
+```
+
+Lint walks the DAG and computes max inference depth per page. A wiki of 5th-generation inferences is drifting — the LLM is reasoning from its own earlier reasoning instead of going back to the source. Lint warns past depth 2 and errors past depth 3, forcing you to either ground the claim in a new extracted fact or split the page so the deep inference becomes a standalone concept with its own extracted backing.
+
+The `[^a]` tag is particularly valuable — it forces investigation of discrepancies instead of silent acceptance of whichever source the LLM happens to read first.
 
 *Drawn from [Ar9av/obsidian-wiki](https://github.com/Ar9av/obsidian-wiki)*
 

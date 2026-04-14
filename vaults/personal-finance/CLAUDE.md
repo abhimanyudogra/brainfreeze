@@ -118,7 +118,7 @@ sources:                        # page-level source list, one entry per raw file
 Every factual claim in a page body carries an inline citation tag. Tags are footnote-style and declare **how** the claim is supported:
 
 - `[^e<n>]` — **extracted**: the claim is directly copied or summarized from a raw source. The footnote body must cite the source file and quote the exact text.
-- `[^i<n>]` — **inferred**: the claim is LLM synthesis across one or more extracted facts. The footnote body must show the derivation (which extracted claims it combines).
+- `[^i<n>]` — **inferred**: the claim is LLM synthesis. The definition line **must** begin with `inferred from [^X1], [^X2], ... — rationale`, where each `[^X]` is an existing parent tag (`[^e]`, `[^i]`, or `[^a]`) on the same page. This turns the provenance space into a small DAG — lint walks it to compute how deep each claim sits from extracted ground truth.
 - `[^a<n>]` — **ambiguous**: two or more sources disagree about the claim. The footnote body must list all conflicting sources and their values; the page body must treat the claim as unresolved and link to an "open question."
 
 Example body snippet:
@@ -130,7 +130,7 @@ over-statement of capital loss [^a1] is under review.
 
 [^e1]: extracted — {{reporting-project-relative-path}}/data/processed/tax_summary_YYYY.json
        field: `total_tax` = XXXXX
-[^i1]: inferred — computed from [^e1] / [^e2]
+[^i1]: inferred from [^e1], [^e2] — effective federal rate = total_tax / AGI
        ([^e2] = tax_summary_YYYY.json field `agi` = XXXXXX)
 [^a1]: ambiguous — tax_summary_YYYY.json reports capital_loss_carryforward = XXXXX
        (implied gross loss XXXXX); reconstruction from 1099-B + supplement totals
@@ -143,6 +143,7 @@ over-statement of capital loss [^a1] is under review.
 **Hard rules:**
 - Every numeric value or dated fact in the body must have a tag. No tag, no claim.
 - A page with `provenance.extracted == 0` and `inferred > 0` is a synthesis-only page (e.g., `strategy/`) and is acceptable, but the inferred tags must point at pages that *do* have extracted backing.
+- Every `[^i]` definition must cite its parents via `inferred from [^X1], [^X2]`. A `[^i]` with no parents, unknown parents, or a chain deeper than 3 hops to any `[^e]` leaf is a lint error — either ground the inference in a new `[^e]` or split the page so the deep inference becomes its own concept page with its own extracted backing.
 - A page with `ambiguous > 0` is automatically flagged by lint and must have at least one `open questions` entry naming the discrepancy.
 
 ## Source-to-page routing rules
@@ -224,6 +225,8 @@ Lint runs in two tiers.
 8. **Contradiction map** — pages whose `relations.contradicts` targets are both still `status: active`.
 9. **Ambiguous without question** — pages with `provenance.ambiguous > 0` but no open-questions entry.
 10. **Archived referenced as active** — a live page cites an archived page without going through `supersedes`.
+11. **Inference-chain depth** — parse each page's `[^i]` definitions and walk the DAG formed by `inferred from [^...]` citations. Warn when max depth > 2 (synthesis stacking on synthesis). Error when max depth > 3 (claim rooted 5+ levels from extracted ground) or when a cited parent tag is missing/malformed.
+12. **Orphan inferences** — `[^i]` definitions with no `inferred from [^...]` clause, or whose parent chain never reaches an `[^e]` leaf (the claim is inference-only with no extracted root).
 
 Structural lint reports a text diff-friendly summary. Failures do not block ingest; they are flagged for the user.
 
@@ -232,6 +235,7 @@ Structural lint reports a text diff-friendly summary. Failures do not block inge
 1. **Drift check** — for every page with `sources:`, re-read the cited raw files and verify the extracted values still match. Flag pages where the raw number changed but the wiki didn't.
 2. **Freshness check** — pages whose `verified:` date is older than the threshold for their category (default: concepts 90d, events 30d, decisions 60d, entities 180d, strategy 30d).
 3. **Cross-page contradiction detection** — scan for numeric claims about the same entity that disagree across pages.
+4. **Inference regeneration** — for each `[^i]` claim, re-derive it from the extracted leaves in its parent chain and flag pages where the original rationale no longer holds (parent source values have changed, or the synthesis no longer follows).
 
 Semantic lint produces an issue list; fixes go through the normal ingest procedure (drafts + approval + commit).
 
